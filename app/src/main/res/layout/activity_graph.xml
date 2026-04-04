@@ -5,17 +5,28 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/bg"
-    android:fitsSystemWindows="true">
+    android:fitsSystemWindows="true"
+    android:padding="8dp">
 
-    <ImageButton
+    <Button
         android:id="@+id/btnGraphExit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end"
-        android:padding="12dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/graph_exit_desc"
-        android:src="@drawable/ic_close"/>
+        android:text="@string/exit"
+        android:onClick="onGraphExitClick"
+        android:textAllCaps="false"
+        android:backgroundTint="@color/control"
+        android:textColor="@color/text"/>
+
+    <TextView
+        android:id="@+id/tvGraphInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:textColor="@color/text"
+        android:textSize="14sp"
+        android:lineSpacingExtra="4dp"/>
 
     <com.example.laba1.FunctionGraphView
         android:id="@+id/graphView"

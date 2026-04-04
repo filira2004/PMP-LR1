@@ -4,35 +4,47 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.util.AttributeSet;
 import android.view.View;
 
 import androidx.annotation.Nullable;
 
-/**
- * Вариант 5: y = tan(x/2) * cos(3*x). Сетка 30×30 px, диапазон x задаётся константами.
- */
+import java.util.Locale;
+
+
 public class FunctionGraphView extends View {
 
     private static final int GRID_STEP_PX = 30;
 
-    /** Диапазон аргумента x (радианы), задаётся в коде */
-    private static final double X_MIN = -Math.PI * 2;
-    private static final double X_MAX = Math.PI * 2;
+    public static final double X_MIN = -Math.PI * 2;
+    public static final double X_MAX = Math.PI * 2;
 
-    /** Видимый диапазон по Y (мир), чтобы график помещался на экран */
     private static final double Y_MIN = -12.0;
     private static final double Y_MAX = 12.0;
 
-    private static final int SAMPLES = 800;
+    private static final double TICK_X_STEP = Math.PI / 2;
+    private static final double TICK_Y_STEP = 3.0;
 
-    /** Макс. скачок |Δy| между соседними точками выборки — разрыв у полюса tan */
+    private static final int SAMPLES = 800;
     private static final double MAX_Y_JUMP = 80.0;
+
+    private static final float PAD_LEFT = 52f;
+    private static final float PAD_RIGHT = 28f;
+    private static final float PAD_TOP = 36f;
+    private static final float PAD_BOTTOM = 52f;
+
+    private static final float ARROW_SIZE = 14f;
+    private static final float TICK_LEN = 10f;
 
     private final Paint gridPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint axisPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint axisFillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint graphPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint bgPaint = new Paint();
+    private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint tickLabelPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Path arrowPath = new Path();
 
     public FunctionGraphView(Context context) {
         super(context);
@@ -53,11 +65,18 @@ public class FunctionGraphView extends View {
         bgPaint.setColor(Color.parseColor("#121212"));
         gridPaint.setColor(0xFF444444);
         gridPaint.setStrokeWidth(1f);
-        axisPaint.setColor(0xFF888888);
-        axisPaint.setStrokeWidth(2f);
+        axisPaint.setColor(0xFFCCCCCC);
+        axisPaint.setStrokeWidth(3f);
+        axisPaint.setStyle(Paint.Style.STROKE);
+        axisFillPaint.setColor(0xFFCCCCCC);
+        axisFillPaint.setStyle(Paint.Style.FILL);
         graphPaint.setColor(0xFF4FC3F7);
         graphPaint.setStrokeWidth(3f);
         graphPaint.setStyle(Paint.Style.STROKE);
+        textPaint.setColor(0xFFE0E0E0);
+        textPaint.setTextSize(32f);
+        tickLabelPaint.setColor(0xFFB0B0B0);
+        tickLabelPaint.setTextSize(28f);
     }
 
     @Override
@@ -70,22 +89,70 @@ public class FunctionGraphView extends View {
             return;
         }
 
+        float plotLeft = PAD_LEFT;
+        float plotTop = PAD_TOP;
+        float plotRight = w - PAD_RIGHT;
+        float plotBottom = h - PAD_BOTTOM;
+        float plotW = plotRight - plotLeft;
+        float plotH = plotBottom - plotTop;
+
         canvas.drawRect(0, 0, w, h, bgPaint);
 
-        for (int x = 0; x <= w; x += GRID_STEP_PX) {
-            canvas.drawLine(x, 0, x, h, gridPaint);
+        for (float x = plotLeft; x <= plotRight; x += GRID_STEP_PX) {
+            canvas.drawLine(x, plotTop, x, plotBottom, gridPaint);
         }
-        for (int y = 0; y <= h; y += GRID_STEP_PX) {
-            canvas.drawLine(0, y, w, y, gridPaint);
+        for (float y = plotTop; y <= plotBottom; y += GRID_STEP_PX) {
+            canvas.drawLine(plotLeft, y, plotRight, y, gridPaint);
         }
 
-        float x0 = worldXToScreen(0, w);
-        float y0 = worldYToScreen(0, h);
-        if (x0 >= 0 && x0 <= w) {
-            canvas.drawLine(x0, 0, x0, h, axisPaint);
+        float xAxisY = worldYToScreen(0, plotTop, plotH);
+        float yAxisX = worldXToScreen(0, plotLeft, plotW);
+
+        boolean showYaxis = yAxisX >= plotLeft && yAxisX <= plotRight;
+        boolean showXaxis = xAxisY >= plotTop && xAxisY <= plotBottom;
+
+        if (showYaxis) {
+            canvas.drawLine(yAxisX, plotTop, yAxisX, plotBottom, axisPaint);
+            drawArrowUp(canvas, yAxisX, plotTop);
+            drawArrowDown(canvas, yAxisX, plotBottom);
+            textPaint.setTextAlign(Paint.Align.LEFT);
+            canvas.drawText("y", yAxisX + 12f, plotTop + 4f + textPaint.getTextSize(), textPaint);
         }
-        if (y0 >= 0 && y0 <= h) {
-            canvas.drawLine(0, y0, w, y0, axisPaint);
+
+        if (showXaxis) {
+            canvas.drawLine(plotLeft, xAxisY, plotRight, xAxisY, axisPaint);
+            drawArrowRight(canvas, plotRight, xAxisY);
+            drawArrowLeft(canvas, plotLeft, xAxisY);
+            textPaint.setTextAlign(Paint.Align.RIGHT);
+            canvas.drawText("x", plotRight - 8f, xAxisY + 40f, textPaint);
+        }
+
+        if (showXaxis) {
+            tickLabelPaint.setTextAlign(Paint.Align.CENTER);
+            for (double xw = Math.ceil(X_MIN / TICK_X_STEP) * TICK_X_STEP; xw <= X_MAX + 1e-9; xw += TICK_X_STEP) {
+                float sx = worldXToScreen(xw, plotLeft, plotW);
+                if (sx < plotLeft || sx > plotRight) {
+                    continue;
+                }
+                canvas.drawLine(sx, xAxisY - TICK_LEN, sx, xAxisY + TICK_LEN, axisPaint);
+                String label = formatXTick(xw);
+                canvas.drawText(label, sx, xAxisY + 32f, tickLabelPaint);
+            }
+        }
+
+        if (showYaxis) {
+            tickLabelPaint.setTextAlign(Paint.Align.RIGHT);
+            for (double yw = Math.ceil(Y_MIN / TICK_Y_STEP) * TICK_Y_STEP; yw <= Y_MAX + 1e-9; yw += TICK_Y_STEP) {
+                if (Math.abs(yw) < 1e-6) {
+                    continue;
+                }
+                float sy = worldYToScreen(yw, plotTop, plotH);
+                if (sy < plotTop || sy > plotBottom) {
+                    continue;
+                }
+                canvas.drawLine(yAxisX - TICK_LEN, sy, yAxisX + TICK_LEN, sy, axisPaint);
+                canvas.drawText(String.format(Locale.US, "%.1f", yw), yAxisX - 14f, sy + 8f, tickLabelPaint);
+            }
         }
 
         double dx = (X_MAX - X_MIN) / SAMPLES;
@@ -101,8 +168,8 @@ public class FunctionGraphView extends View {
                 hasPrev = false;
                 continue;
             }
-            float sx = worldXToScreen(xw, w);
-            float sy = worldYToScreen(yw, h);
+            float sx = worldXToScreen(xw, plotLeft, plotW);
+            float sy = worldYToScreen(yw, plotTop, plotH);
 
             if (hasPrev) {
                 if (Math.abs(yw - prevYWorld) <= MAX_Y_JUMP) {
@@ -116,9 +183,62 @@ public class FunctionGraphView extends View {
         }
     }
 
-    /**
-     * @return значение y или null, если точка у полюса / не число
-     */
+    private String formatXTick(double xw) {
+        double eps = 1e-6;
+        if (Math.abs(xw) < eps) {
+            return "0";
+        }
+        if (Math.abs(Math.abs(xw) - Math.PI / 2) < 0.08) {
+            return xw > 0 ? "π/2" : "-π/2";
+        }
+        if (Math.abs(Math.abs(xw) - Math.PI) < 0.08) {
+            return xw > 0 ? "π" : "-π";
+        }
+        if (Math.abs(Math.abs(xw) - 3 * Math.PI / 2) < 0.08) {
+            return xw > 0 ? "3π/2" : "-3π/2";
+        }
+        if (Math.abs(Math.abs(xw) - 2 * Math.PI) < 0.08) {
+            return xw > 0 ? "2π" : "-2π";
+        }
+        return String.format(Locale.US, "%.2f", xw);
+    }
+
+    private void drawArrowUp(Canvas canvas, float cx, float cy) {
+        arrowPath.reset();
+        arrowPath.moveTo(cx, cy);
+        arrowPath.lineTo(cx - ARROW_SIZE * 0.55f, cy + ARROW_SIZE);
+        arrowPath.lineTo(cx + ARROW_SIZE * 0.55f, cy + ARROW_SIZE);
+        arrowPath.close();
+        canvas.drawPath(arrowPath, axisFillPaint);
+    }
+
+    private void drawArrowDown(Canvas canvas, float cx, float cy) {
+        arrowPath.reset();
+        arrowPath.moveTo(cx, cy);
+        arrowPath.lineTo(cx - ARROW_SIZE * 0.55f, cy - ARROW_SIZE);
+        arrowPath.lineTo(cx + ARROW_SIZE * 0.55f, cy - ARROW_SIZE);
+        arrowPath.close();
+        canvas.drawPath(arrowPath, axisFillPaint);
+    }
+
+    private void drawArrowRight(Canvas canvas, float cx, float cy) {
+        arrowPath.reset();
+        arrowPath.moveTo(cx, cy);
+        arrowPath.lineTo(cx - ARROW_SIZE, cy - ARROW_SIZE * 0.55f);
+        arrowPath.lineTo(cx - ARROW_SIZE, cy + ARROW_SIZE * 0.55f);
+        arrowPath.close();
+        canvas.drawPath(arrowPath, axisFillPaint);
+    }
+
+    private void drawArrowLeft(Canvas canvas, float cx, float cy) {
+        arrowPath.reset();
+        arrowPath.moveTo(cx, cy);
+        arrowPath.lineTo(cx + ARROW_SIZE, cy - ARROW_SIZE * 0.55f);
+        arrowPath.lineTo(cx + ARROW_SIZE, cy + ARROW_SIZE * 0.55f);
+        arrowPath.close();
+        canvas.drawPath(arrowPath, axisFillPaint);
+    }
+
     private Double evalY(double x) {
         double half = x / 2.0;
         if (Math.abs(Math.cos(half)) < 1e-6) {
@@ -134,12 +254,11 @@ public class FunctionGraphView extends View {
         return y;
     }
 
-    private float worldXToScreen(double xWorld, int w) {
-        return (float) ((xWorld - X_MIN) / (X_MAX - X_MIN) * w);
+    private float worldXToScreen(double xWorld, float plotLeft, float plotW) {
+        return (float) (plotLeft + (xWorld - X_MIN) / (X_MAX - X_MIN) * plotW);
     }
 
-    /** Ось Y вверх — инверсия для экрана */
-    private float worldYToScreen(double yWorld, int h) {
-        return (float) ((Y_MAX - yWorld) / (Y_MAX - Y_MIN) * h);
+    private float worldYToScreen(double yWorld, float plotTop, float plotH) {
+        return (float) (plotTop + (Y_MAX - yWorld) / (Y_MAX - Y_MIN) * plotH);
     }
 }

@@ -158,9 +158,6 @@ public class MainActivity extends AppCompatActivity {
         isNewInput = true;
     }
 
-    /**
-     * @return false if parse failed or division by zero (dialog already shown)
-     */
     private boolean calculateInternal() {
         Double value = tryParseDouble(input);
         if (value == null) {
@@ -248,7 +245,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /** @return null if string is not a valid number */
     private Double tryParseDouble(String str) {
         if (str == null || str.isEmpty()) {
             return null;

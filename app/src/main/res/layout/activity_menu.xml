@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="24dp"
+    android:background="@color/bg"
+    android:fitsSystemWindows="true">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/menu_title"
+        android:textColor="@color/text"
+        android:textSize="22sp"
+        android:paddingBottom="24dp"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/menu_calculator"
+        android:onClick="onOpenCalculator"
+        android:textAllCaps="false"
+        style="@style/Widget.AppCompat.Button"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="@string/menu_graphs"
+        android:alpha="0.5"
+        android:clickable="false"
+        android:textAllCaps="false"
+        style="@style/Widget.AppCompat.Button"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="@string/menu_exit"
+        android:onClick="onExitApp"
+        android:textAllCaps="false"
+        style="@style/Widget.AppCompat.Button"/>
+
+</LinearLayout>

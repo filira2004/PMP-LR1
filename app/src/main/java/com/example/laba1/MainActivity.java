@@ -1,7 +1,6 @@
 package com.example.laba1;
 
 import android.os.Bundle;
-import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -28,15 +27,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        DisplayMetrics metrics = getResources().getDisplayMetrics();
-        boolean isValid = (metrics.heightPixels >= 1920 && metrics.widthPixels >= 1080)
-                || (metrics.heightPixels >= 1080 && metrics.widthPixels >= 1920);
-
-        if (!isValid) {
-            showErrorDialog(getString(R.string.error_incompatible_device));
-            return;
-        }
-
         setContentView(R.layout.activity_main);
 
         display = findViewById(R.id.tvDisplay);
@@ -46,17 +36,8 @@ public class MainActivity extends AppCompatActivity {
         expressionView.setText("");
     }
 
-    private void showErrorDialog(String msg) {
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.error_title)
-                .setMessage(msg)
-                .setCancelable(false)
-                .setNegativeButton(R.string.exit, (d, i) -> {
-                    finishAffinity();
-                    android.os.Process.killProcess(android.os.Process.myPid());
-                    System.exit(1);
-                })
-                .show();
+    public void onExitClick(View v) {
+        finish();
     }
 
     private void showDivisionError() {

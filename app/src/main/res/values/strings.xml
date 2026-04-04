@@ -11,4 +11,7 @@
     <string name="menu_calculator">Калькулятор</string>
     <string name="menu_graphs">Графики</string>
     <string name="menu_exit">Выход</string>
+    <string name="menu_graph">График</string>
+    <string name="graph_title">График функции</string>
+    <string name="graph_exit_desc">Выход в главное меню</string>
 </resources>

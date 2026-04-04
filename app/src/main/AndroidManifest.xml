@@ -23,6 +23,10 @@
         <activity
             android:name=".MainActivity"
             android:exported="false" />
+        <activity
+            android:name=".GraphActivity"
+            android:exported="false"
+            android:label="@string/graph_title" />
     </application>
 
 </manifest>

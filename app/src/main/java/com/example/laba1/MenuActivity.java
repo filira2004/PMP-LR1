@@ -43,6 +43,10 @@ public class MenuActivity extends AppCompatActivity {
         startActivity(new Intent(this, MainActivity.class));
     }
 
+    public void onOpenGraph(View v) {
+        startActivity(new Intent(this, GraphActivity.class));
+    }
+
     public void onExitApp(View v) {
         finishAffinity();
         android.os.Process.killProcess(android.os.Process.myPid());

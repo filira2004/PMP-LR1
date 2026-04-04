@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">LABA1</string>
+    <string name="error_title">Ошибка</string>
+    <string name="error_incompatible_device">Несовместимое устройство!</string>
+    <string name="error_division_by_zero">Деление на ноль!</string>
+    <string name="error_invalid_number">Некорректное число!</string>
+    <string name="error_second_operand_required">Введите второе число!</string>
+    <string name="exit">Выход</string>
+    <string name="ok">OK</string>
+</resources>

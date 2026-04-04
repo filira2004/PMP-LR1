@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:background="@color/bg"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:fitsSystemWindows="true"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/tvExpression"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="18sp"
+        android:textColor="@color/text"
+        android:gravity="end"
+        android:padding="8dp"
+        android:focusable="false"/>
+
+    <TextView
+        android:id="@+id/tvDisplay"
+        android:background="@color/display"
+        android:textColor="@color/text"
+        android:text="0"
+        android:textSize="48sp"
+        android:gravity="end|bottom"
+        android:padding="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:focusable="false"/>
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:columnCount="4">
+
+        <Button style="@style/memoryBtn" android:text="MC" android:onClick="onMemoryClick"/>
+        <Button style="@style/memoryBtn" android:text="MR" android:onClick="onMemoryClick"/>
+        <Button style="@style/memoryBtn" android:text="M+" android:onClick="onMemoryClick"/>
+        <Button style="@style/memoryBtn" android:text="M-" android:onClick="onMemoryClick"/>
+
+        <Button style="@style/memoryBtn" android:text="MS" android:onClick="onMemoryClick"/>
+        <Button style="@style/controlBtn" android:text="C" android:onClick="onClearClick"/>
+        <Button style="@style/controlBtn" android:text="←" android:onClick="onBackspaceClick"/>
+        <Button style="@style/operatorBtn" android:text="÷" android:onClick="onOperatorClick"/>
+
+        <Button style="@style/digitBtn" android:text="7" android:onClick="onNumberClick"/>
+        <Button style="@style/digitBtn" android:text="8" android:onClick="onNumberClick"/>
+        <Button style="@style/digitBtn" android:text="9" android:onClick="onNumberClick"/>
+        <Button style="@style/operatorBtn" android:text="×" android:onClick="onOperatorClick"/>
+
+        <Button style="@style/digitBtn" android:text="4" android:onClick="onNumberClick"/>
+        <Button style="@style/digitBtn" android:text="5" android:onClick="onNumberClick"/>
+        <Button style="@style/digitBtn" android:text="6" android:onClick="onNumberClick"/>
+        <Button style="@style/operatorBtn" android:text="-" android:onClick="onOperatorClick"/>
+
+        <Button style="@style/digitBtn" android:text="1" android:onClick="onNumberClick"/>
+        <Button style="@style/digitBtn" android:text="2" android:onClick="onNumberClick"/>
+        <Button style="@style/digitBtn" android:text="3" android:onClick="onNumberClick"/>
+        <Button style="@style/operatorBtn" android:text="+" android:onClick="onOperatorClick"/>
+
+        <Button style="@style/digitBtn" android:layout_columnSpan="2" android:text="0" android:onClick="onNumberClick"/>
+        <Button style="@style/digitBtn" android:text="," android:onClick="onDecimalClick"/>
+        <Button style="@style/operatorBtn" android:text="=" android:onClick="onEqualsClick"/>
+    </GridLayout>
+
+</LinearLayout>

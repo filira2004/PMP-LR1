@@ -5,28 +5,23 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PointF;
 import android.util.AttributeSet;
 import android.view.View;
 
 import androidx.annotation.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
-
 
 public class FunctionGraphView extends View {
 
     private static final int GRID_STEP_PX = 30;
 
-    public static final double X_MIN = -Math.PI * 2;
-    public static final double X_MAX = Math.PI * 2;
-
-    private static final double Y_MIN = -12.0;
-    private static final double Y_MAX = 12.0;
-
     private static final double TICK_X_STEP = Math.PI / 2;
     private static final double TICK_Y_STEP = 3.0;
 
-    private static final int SAMPLES = 800;
     private static final double MAX_Y_JUMP = 80.0;
 
     private static final float PAD_LEFT = 52f;
@@ -37,14 +32,19 @@ public class FunctionGraphView extends View {
     private static final float ARROW_SIZE = 14f;
     private static final float TICK_LEN = 10f;
 
+    private static final float EXTREMA_RADIUS = 10f;
+
     private final Paint gridPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint axisPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint axisFillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint graphPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint extremaPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint bgPaint = new Paint();
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint tickLabelPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Path arrowPath = new Path();
+
+    private final List<PointF> extremaPoints = new ArrayList<>();
 
     public FunctionGraphView(Context context) {
         super(context);
@@ -73,6 +73,8 @@ public class FunctionGraphView extends View {
         graphPaint.setColor(0xFF4FC3F7);
         graphPaint.setStrokeWidth(3f);
         graphPaint.setStyle(Paint.Style.STROKE);
+        extremaPaint.setColor(0xFFFFD600);
+        extremaPaint.setStyle(Paint.Style.FILL);
         textPaint.setColor(0xFFE0E0E0);
         textPaint.setTextSize(32f);
         tickLabelPaint.setColor(0xFFB0B0B0);
@@ -129,7 +131,8 @@ public class FunctionGraphView extends View {
 
         if (showXaxis) {
             tickLabelPaint.setTextAlign(Paint.Align.CENTER);
-            for (double xw = Math.ceil(X_MIN / TICK_X_STEP) * TICK_X_STEP; xw <= X_MAX + 1e-9; xw += TICK_X_STEP) {
+            for (double xw = Math.ceil(GraphFunctionMath.X_MIN / TICK_X_STEP) * TICK_X_STEP;
+                    xw <= GraphFunctionMath.X_MAX + 1e-9; xw += TICK_X_STEP) {
                 float sx = worldXToScreen(xw, plotLeft, plotW);
                 if (sx < plotLeft || sx > plotRight) {
                     continue;
@@ -142,7 +145,8 @@ public class FunctionGraphView extends View {
 
         if (showYaxis) {
             tickLabelPaint.setTextAlign(Paint.Align.RIGHT);
-            for (double yw = Math.ceil(Y_MIN / TICK_Y_STEP) * TICK_Y_STEP; yw <= Y_MAX + 1e-9; yw += TICK_Y_STEP) {
+            for (double yw = Math.ceil(GraphFunctionMath.Y_MIN / TICK_Y_STEP) * TICK_Y_STEP;
+                    yw <= GraphFunctionMath.Y_MAX + 1e-9; yw += TICK_Y_STEP) {
                 if (Math.abs(yw) < 1e-6) {
                     continue;
                 }
@@ -155,15 +159,15 @@ public class FunctionGraphView extends View {
             }
         }
 
-        double dx = (X_MAX - X_MIN) / SAMPLES;
+        double dx = (GraphFunctionMath.X_MAX - GraphFunctionMath.X_MIN) / GraphFunctionMath.SAMPLES;
         float prevSx = 0;
         float prevSy = 0;
         boolean hasPrev = false;
         double prevYWorld = 0;
 
-        for (int i = 0; i <= SAMPLES; i++) {
-            double xw = X_MIN + i * dx;
-            Double yw = evalY(xw);
+        for (int i = 0; i <= GraphFunctionMath.SAMPLES; i++) {
+            double xw = GraphFunctionMath.X_MIN + i * dx;
+            Double yw = GraphFunctionMath.evalY(xw);
             if (yw == null) {
                 hasPrev = false;
                 continue;
@@ -181,6 +185,20 @@ public class FunctionGraphView extends View {
             prevYWorld = yw;
             hasPrev = true;
         }
+
+        for (PointF p : extremaPoints) {
+            float sx = worldXToScreen(p.x, plotLeft, plotW);
+            float sy = worldYToScreen(p.y, plotTop, plotH);
+            canvas.drawCircle(sx, sy, EXTREMA_RADIUS, extremaPaint);
+        }
+    }
+
+    public void setExtremaPoints(List<PointF> points) {
+        extremaPoints.clear();
+        if (points != null) {
+            extremaPoints.addAll(points);
+        }
+        invalidate();
     }
 
     private String formatXTick(double xw) {
@@ -239,26 +257,13 @@ public class FunctionGraphView extends View {
         canvas.drawPath(arrowPath, axisFillPaint);
     }
 
-    private Double evalY(double x) {
-        double half = x / 2.0;
-        if (Math.abs(Math.cos(half)) < 1e-6) {
-            return null;
-        }
-        double y = Math.tan(half) * Math.cos(3.0 * x);
-        if (!Double.isFinite(y)) {
-            return null;
-        }
-        if (y < Y_MIN || y > Y_MAX) {
-            return null;
-        }
-        return y;
-    }
-
     private float worldXToScreen(double xWorld, float plotLeft, float plotW) {
-        return (float) (plotLeft + (xWorld - X_MIN) / (X_MAX - X_MIN) * plotW);
+        return (float) (plotLeft + (xWorld - GraphFunctionMath.X_MIN)
+                / (GraphFunctionMath.X_MAX - GraphFunctionMath.X_MIN) * plotW);
     }
 
     private float worldYToScreen(double yWorld, float plotTop, float plotH) {
-        return (float) (plotTop + (Y_MAX - yWorld) / (Y_MAX - Y_MIN) * plotH);
+        return (float) (plotTop + (GraphFunctionMath.Y_MAX - yWorld)
+                / (GraphFunctionMath.Y_MAX - GraphFunctionMath.Y_MIN) * plotH);
     }
 }

@@ -16,4 +16,5 @@
     <string name="graph_exit_desc">Выход в главное меню</string>
     <string name="graph_function_formula">y = tan(x/2)·cos(3x)</string>
     <string name="graph_x_range_template">Диапазон x в коде: от %1$.4f до %2$.4f рад (от %3$.1f° до %4$.1f°)</string>
+    <string name="graph_lab4_db_note">ЛР4: координаты точек графика записываются в SQLite; перед построением таблица очищается. Жёлтые точки — локальные экстремумы по данным из БД.</string>
 </resources>
